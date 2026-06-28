@@ -13,7 +13,7 @@ const mensajesPorUsuario: Record<string, string> = {
   mono: 'monito bebe mi vida mi amor mi salvación, te espero bro',
   car: 'PUTO CAR SE QUE NO VAS A VERNIR PERO IGUAL TAS INVITADO',
   mapache: 'felicidades por ganar tu partido mi bro, estas invitado a mi invasión',
-  manu: 'MANUEEELLL, tas invitado a mi cum bro lo juto',
+  manu: 'MANUEEELLL, tas invitado a mi cum bro lo juto, solo te duermas bro (si no sales cojeando)',
   tiobabu: 'maldito borracho de mierdaaa (go riendas)',
   china: '调整：我特意翻译了这个，就是为了让你能看懂。我邀请你来参加我的生日派对。',
   yuda: 'estas invitada a mi cum yudiña, de regalo quiero lentes de descanso lo juto',
