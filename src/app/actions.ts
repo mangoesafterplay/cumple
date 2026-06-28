@@ -22,50 +22,29 @@ async function obtenerUserIP() {
 
 // 1. Obtener sesión activa (Para saltar la landing)
 export async function obtenerSesionActiva() {
-  // --- COOKIES DESACTIVADAS MOMENTÁNEAMENTE ---
-  // const cookieStore = await cookies();
-  // const token = cookieStore.get('invitado_id')?.value;
-  
   const userIp = await obtenerUserIP();
 
-  // Primero verificar por Cookie (Comentado)
-  // if (token) {
-  //   const usuario = await db.select().from(invitados).where(eq(invitados.id, parseInt(token)));
-  //   if (usuario.length > 0) return usuario[0];
-  // }
-
-  // Si quieres que tampoco te salte por IP mientras testeas, puedes comentar este bloque completo:
   if (userIp && userIp !== '127.0.0.1') {
     const usuarioPorIp = await db.select().from(invitados).where(eq(invitados.ip, userIp));
     if (usuarioPorIp.length > 0) {
-      // cookieStore.set('invitado_id', usuarioPorIp[0].id.toString(), { maxAge: 60 * 60 * 24 * 30 });
       return usuarioPorIp[0];
     }
   }
-
   return null;
 }
 
-// 2. Validar Apodo (Soporta múltiples alias y guarda sesión/IP)
+// 2. Validar Apodo
 export async function verificarApodo(apodoForm: string) {
   const apodoLimpio = apodoForm.trim().toLowerCase();
   const userIp = await obtenerUserIP();
 
-  // Consulta usando SQL nativo embebido en Drizzle para buscar dentro del Array de Postgres
   const resultado = await db.select().from(invitados).where(
     drizzleSql`${invitados.apodos} @> ARRAY[${apodoLimpio}]::text[]`
   );
 
   if (resultado.length > 0) {
     const usuario = resultado[0];
-
-    // Actualizamos el registro con su IP para bloquear accesos duplicados
     await db.update(invitados).set({ ip: userIp }).where(eq(invitados.id, usuario.id));
-
-    // --- COOKIES DESACTIVADAS MOMENTÁNEAMENTE ---
-    // const cookieStore = await cookies();
-    // cookieStore.set('invitado_id', usuario.id.toString(), { maxAge: 60 * 60 * 24 * 30 });
-
     return { success: true, usuario };
   }
 
@@ -123,11 +102,12 @@ export async function obtenerMensajesChat() {
   })
   .from(chatGeneral)
   .leftJoin(invitados, eq(chatGeneral.invitadoId, invitados.id))
-  .orderBy(chatGeneral.creadoEn); // En orden cronológico para el chat
+  .orderBy(chatGeneral.creadoEn);
 
   return resultado;
 }
 
+// 8. Subida directa adaptada para Server Actions planos
 export async function subirFotoMuro(formData: FormData) {
   const file = formData.get('file') as File;
   if (!file || file.size === 0) return null;
@@ -136,11 +116,10 @@ export async function subirFotoMuro(formData: FormData) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Forzamos la lectura del token de Vercel explícitamente
-    const blob = await put(file.name, buffer, {
+    const blob = await put(`muro-${Date.now()}-${file.name}`, buffer, {
       access: 'public',
       contentType: file.type,
-      token: process.env.BLOB_READ_WRITE_TOKEN, // 🔥 Aseguramos el token aquí
+      token: process.env.BLOB_READ_WRITE_TOKEN,
     });
 
     return blob.url;
