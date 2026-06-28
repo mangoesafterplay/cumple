@@ -1,6 +1,6 @@
 'use server';
 
-import { put } from '@vercel/blob';
+import { put, list, head, getDownloadUrl } from '@vercel/blob';
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { invitados, muro, chatGeneral } from '@/db/schema';
@@ -89,7 +89,7 @@ export async function obtenerPostsMuro() {
   .leftJoin(invitados, eq(muro.invitadoId, invitados.id))
   .orderBy(desc(muro.creadoEn));
 
-  return resultado;
+  return resultado; // sin el Promise.all de URLs firmadas
 }
 
 // 7. Traer los últimos 50 mensajes del chat general
@@ -119,7 +119,7 @@ export async function subirFotoMuro(base64: string, contentType: string, fileNam
     const buffer = Buffer.from(base64, 'base64');
 
     const blob = await put(`muro/${Date.now()}-${fileName}`, buffer, {
-      access: 'public',
+      access: 'public', // funciona si el store es público
       contentType,
       token: tokenBlob,
     });
