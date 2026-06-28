@@ -1,5 +1,13 @@
 'use server';
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+  },
+};
+
 import { put } from '@vercel/blob';
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
@@ -130,12 +138,21 @@ export async function obtenerMensajesChat() {
 
 export async function subirFotoMuro(formData: FormData) {
   const file = formData.get('file') as File;
-  if (!file) return null;
+  if (!file || file.size === 0) return null;
 
-  // El método 'put' lee automáticamente tu BLOB_READ_WRITE_TOKEN en Vercel
-  const blob = await put(file.name, file, {
-    access: 'public',
-  });
+  try {
+    // Convertimos el archivo a un Buffer nativo para que Vercel put lo procese sin fallos de streaming
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
 
-  return blob.url; // Retorna la URL final de la imagen
+    const blob = await put(file.name, buffer, {
+      access: 'public',
+      contentType: file.type, // Asegura que se guarde con el formato correcto (.jpg, .png, etc.)
+    });
+
+    return blob.url;
+  } catch (error) {
+    console.error("Error crítico en el servidor de Vercel Blob:", error);
+    return null;
+  }
 }
