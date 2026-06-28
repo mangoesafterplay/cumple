@@ -105,33 +105,41 @@ export default function Home() {
     let finalUrl = '';
 
     try {
+      // 1. PRIMERO SUBIMOS LA FOTO SI EXISTE
       if (fileMuro) {
-        // Empaquetamos el archivo en un FormData nativo para mandarlo al servidor
         const formData = new FormData();
         formData.append('file', fileMuro);
 
-        // Llamamos al backend para que él haga la subida segura
         const urlSubida = await subirFotoMuro(formData);
-        if (urlSubida) finalUrl = urlSubida;
+        if (urlSubida) {
+          finalUrl = urlSubida;
+        }
       }
 
+      // 2. LUEGO GUARDAMOS EN NEON CON LA URL REAL
       await publicarEnMuro(usuario.id, mensajeMuro, finalUrl);
-      setPostsMuro([{ id: Date.now(), nombre: usuario.nombre, mensaje: mensajeMuro, fotoUrl: finalUrl, creadoEn: new Date() }, ...postsMuro]);
+      
+      // 3. ACTUALIZAMOS EL ESTADO LOCAL
+      setPostsMuro([
+        { 
+          id: Date.now(), 
+          nombre: usuario.nombre, 
+          mensaje: mensajeMuro, 
+          fotoUrl: finalUrl, 
+          creadoEn: new Date() 
+        }, 
+        ...postsMuro
+      ]);
+
+      // 4. FINALMENTE LIMPIAMOS LOS INPUTS
       setMensajeMuro('');
       setFileMuro(null);
+
     } catch (err) {
       console.error("Error al subir shitpost:", err);
     } finally {
       setSubiendoFoto(false);
     }
-  };
-
-  const handleChatSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!mensajeChat.trim() || !usuario) return;
-    await enviarMensajeChat(usuario.id, mensajeChat);
-    setMensajesChat([...mensajesChat, { id: Date.now(), nombre: usuario.nombre, mensaje: mensajeChat }]);
-    setMensajeChat('');
   };
 
   if (cargandoSesion) {
