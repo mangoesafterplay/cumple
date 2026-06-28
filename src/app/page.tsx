@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skull, MessageSquare, Send, Zap, MapPin, Calendar, Clock, AlertTriangle, Image as ImageIcon } from 'lucide-react';
-import { verificarApodo, obtenerSesionActiva, confirmarAsistencia, publicarEnMuro, enviarMensajeChat, obtenerPostsMuro, obtenerMensajesChat, subirFotoMuro } from './actions';
+import { verificarApodo, obtenerSesionActiva, confirmarAsistencia, publicarEnMuro, enviarMensajeChat, obtenerPostsMuro, obtenerMensajesChat } from './actions';
+import { upload } from '@vercel/blob/client';
 
 // EL DICCIONARIO DE MENSAJES CURSED (INTACTO)
 const mensajesPorUsuario: Record<string, string> = {
@@ -106,42 +107,35 @@ const handleMuroSubmit = async (e: React.FormEvent) => {
 
   try {
     if (fileMuro) {
-      // Convierte a base64 en el cliente
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve((reader.result as string).split(',')[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(fileMuro);
+      const blob = await upload(fileMuro.name, fileMuro, {
+        access: 'private',
+        handleUploadUrl: '/api/upload',
       });
-
-      const urlSubida = await subirFotoMuro(base64, fileMuro.type, fileMuro.name);
-      if (urlSubida) finalUrl = urlSubida;
+      if (blob?.url) finalUrl = blob.url;
     }
 
     await publicarEnMuro(usuario.id, mensajeMuro, finalUrl);
-      
-      // 3. ACTUALIZAMOS EL ESTADO LOCAL
-      setPostsMuro([
-        { 
-          id: Date.now(), 
-          nombre: usuario.nombre, 
-          mensaje: mensajeMuro, 
-          fotoUrl: finalUrl, 
-          creadoEn: new Date() 
-        }, 
-        ...postsMuro
-      ]);
 
-      // 4. FINALMENTE LIMPIAMOS LOS INPUTS
-      setMensajeMuro('');
-      setFileMuro(null);
+    setPostsMuro([
+      {
+        id: Date.now(),
+        nombre: usuario.nombre,
+        mensaje: mensajeMuro,
+        fotoUrl: finalUrl ? `/api/blob?url=${encodeURIComponent(finalUrl)}` : '',
+        creadoEn: new Date()
+      },
+      ...postsMuro
+    ]);
 
-    } catch (err) {
-      console.error("Error al subir shitpost:", err);
-    } finally {
-      setSubiendoFoto(false);
-    }
-  };
+    setMensajeMuro('');
+    setFileMuro(null);
+
+  } catch (err) {
+    console.error("Error al subir shitpost:", err);
+  } finally {
+    setSubiendoFoto(false);
+  }
+};
 
   const handleChatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

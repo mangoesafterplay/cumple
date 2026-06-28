@@ -116,7 +116,7 @@ export async function obtenerMensajesChat() {
 
   return resultado;
 }
-
+/*
 // 8. Subida directa adaptada para Server Actions planos
 export async function subirFotoMuro(base64: string, contentType: string, fileName: string) {
   try {
@@ -140,3 +140,4 @@ export async function subirFotoMuro(base64: string, contentType: string, fileNam
     return null;
   }
 }
+*/
