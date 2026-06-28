@@ -75,17 +75,9 @@ export default function Home() {
     setErrorLanding('');
     
     const res = await verificarApodo(apodoInput);
-    if (res.success) {
+    if (res.success && res.usuario) {
       setUsuario(res.usuario);
-      setConfirmado(res.usuario.confirmado);
-      
-      const [muroData, chatData] = await Promise.all([
-        obtenerPostsMuro(),
-        obtenerMensajesChat()
-      ]);
-      setPostsMuro(muroData);
-      setMensajesChat(chatData);
-      
+      setConfirmado(res.usuario.confirmado ?? false);
     } else {
       setErrorLanding(res.error || 'ERROR FATAL. NO EXISTES.');
     }
