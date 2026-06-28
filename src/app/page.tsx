@@ -142,6 +142,14 @@ export default function Home() {
     }
   };
 
+  const handleChatSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mensajeChat.trim() || !usuario) return;
+    await enviarMensajeChat(usuario.id, mensajeChat);
+    setMensajesChat([...mensajesChat, { id: Date.now(), nombre: usuario.nombre, mensaje: mensajeChat }]);
+    setMensajeChat('');
+  };
+
   if (cargandoSesion) {
     return (
       <div className="min-h-screen bg-zinc-200 flex items-center justify-center font-mono">
