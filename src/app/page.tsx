@@ -97,27 +97,28 @@ export default function Home() {
     setConfirmado(asiste);
   };
 
-  const handleMuroSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if ((!mensajeMuro.trim() && !fileMuro) || !usuario) return;
+const handleMuroSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if ((!mensajeMuro.trim() && !fileMuro) || !usuario) return;
 
-    setSubiendoFoto(true);
-    let finalUrl = '';
+  setSubiendoFoto(true);
+  let finalUrl = '';
 
-    try {
-      // 1. PRIMERO SUBIMOS LA FOTO SI EXISTE
-      if (fileMuro) {
-        const formData = new FormData();
-        formData.append('file', fileMuro);
+  try {
+    if (fileMuro) {
+      // Convierte a base64 en el cliente
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(fileMuro);
+      });
 
-        const urlSubida = await subirFotoMuro(formData);
-        if (urlSubida) {
-          finalUrl = urlSubida;
-        }
-      }
+      const urlSubida = await subirFotoMuro(base64, fileMuro.type, fileMuro.name);
+      if (urlSubida) finalUrl = urlSubida;
+    }
 
-      // 2. LUEGO GUARDAMOS EN NEON CON LA URL REAL
-      await publicarEnMuro(usuario.id, mensajeMuro, finalUrl);
+    await publicarEnMuro(usuario.id, mensajeMuro, finalUrl);
       
       // 3. ACTUALIZAMOS EL ESTADO LOCAL
       setPostsMuro([

@@ -108,38 +108,25 @@ export async function obtenerMensajesChat() {
 }
 
 // 8. Subida directa adaptada para Server Actions planos
-export async function subirFotoMuro(formData: FormData) {
-  const file = formData.get('file') as File;
-  if (!file || file.size === 0) return null;
-
+export async function subirFotoMuro(base64: string, contentType: string, fileName: string) {
   try {
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Forzamos el uso del token del sistema
     const tokenBlob = process.env.BLOB_READ_WRITE_TOKEN;
-    
     if (!tokenBlob) {
-      console.error("❌ ERROR: El BLOB_READ_WRITE_TOKEN no está definido en las variables de entorno.");
+      console.error("❌ BLOB_READ_WRITE_TOKEN no definido");
       return null;
     }
 
-    // Ejecutamos la subida estructurando el nombre para evitar colisiones
-    const blob = await put(`muro/${Date.now()}-${file.name}`, buffer, {
+    const buffer = Buffer.from(base64, 'base64');
+
+    const blob = await put(`muro/${Date.now()}-${fileName}`, buffer, {
       access: 'public',
-      contentType: file.type,
+      contentType,
       token: tokenBlob,
     });
 
-    if (!blob || !blob.url) {
-      console.error("❌ Vercel Blob no devolvió una URL válida.");
-      return null;
-    }
-
-    return blob.url;
+    return blob?.url ?? null;
   } catch (error) {
-    // Esto imprimirá el motivo exacto del fallo en los logs de Vercel (ej: límites de tamaño o credenciales)
-    console.error("❌ ERROR CRÍTICO DETECTADO EN EL PROCESO DE VERCEL BLOB:", error);
+    console.error("❌ ERROR VERCEL BLOB:", error);
     return null;
   }
 }
