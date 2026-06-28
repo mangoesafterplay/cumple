@@ -92,8 +92,8 @@ export async function obtenerPostsMuro() {
   const postsConUrls = await Promise.all(
     resultado.map(async (post) => {
       if (post.fotoUrl) {
-        const downloadUrl = getDownloadUrl(post.fotoUrl);
-        return { ...post, fotoUrl: downloadUrl };
+        const proxyUrl = `/api/blob?url=${encodeURIComponent(post.fotoUrl)}`;
+        return { ...post, fotoUrl: proxyUrl };
       }
       return post;
     })
