@@ -89,7 +89,17 @@ export async function obtenerPostsMuro() {
   .leftJoin(invitados, eq(muro.invitadoId, invitados.id))
   .orderBy(desc(muro.creadoEn));
 
-  return resultado; // sin el Promise.all de URLs firmadas
+  const postsConUrls = await Promise.all(
+    resultado.map(async (post) => {
+      if (post.fotoUrl) {
+        const downloadUrl = getDownloadUrl(post.fotoUrl);
+        return { ...post, fotoUrl: downloadUrl };
+      }
+      return post;
+    })
+  );
+
+  return postsConUrls;
 }
 
 // 7. Traer los últimos 50 mensajes del chat general
@@ -119,7 +129,7 @@ export async function subirFotoMuro(base64: string, contentType: string, fileNam
     const buffer = Buffer.from(base64, 'base64');
 
     const blob = await put(`muro/${Date.now()}-${fileName}`, buffer, {
-      access: 'public', // funciona si el store es público
+      access: 'private',
       contentType,
       token: tokenBlob,
     });
