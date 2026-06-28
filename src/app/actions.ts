@@ -116,15 +116,30 @@ export async function subirFotoMuro(formData: FormData) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const blob = await put(`muro-${Date.now()}-${file.name}`, buffer, {
+    // Forzamos el uso del token del sistema
+    const tokenBlob = process.env.BLOB_READ_WRITE_TOKEN;
+    
+    if (!tokenBlob) {
+      console.error("❌ ERROR: El BLOB_READ_WRITE_TOKEN no está definido en las variables de entorno.");
+      return null;
+    }
+
+    // Ejecutamos la subida estructurando el nombre para evitar colisiones
+    const blob = await put(`muro/${Date.now()}-${file.name}`, buffer, {
       access: 'public',
       contentType: file.type,
-      token: process.env.BLOB_READ_WRITE_TOKEN,
+      token: tokenBlob,
     });
+
+    if (!blob || !blob.url) {
+      console.error("❌ Vercel Blob no devolvió una URL válida.");
+      return null;
+    }
 
     return blob.url;
   } catch (error) {
-    console.error("❌ ERROR CRÍTICO EN VERCEL BLOB STORES:", error);
+    // Esto imprimirá el motivo exacto del fallo en los logs de Vercel (ej: límites de tamaño o credenciales)
+    console.error("❌ ERROR CRÍTICO DETECTADO EN EL PROCESO DE VERCEL BLOB:", error);
     return null;
   }
 }
