@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skull, MessageSquare, Send, Zap, MapPin, Calendar, Clock, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 import { verificarApodo, obtenerSesionActiva, confirmarAsistencia, publicarEnMuro, enviarMensajeChat, obtenerPostsMuro, obtenerMensajesChat, subirFotoMuro } from './actions';
-import { upload } from '@vercel/blob/client';
 
 // EL DICCIONARIO DE MENSAJES CURSED (INTACTO)
 const mensajesPorUsuario: Record<string, string> = {
