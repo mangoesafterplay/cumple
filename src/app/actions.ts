@@ -3,7 +3,7 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { invitados, muro, chatGeneral } from '@/db/schema';
-import { eq, sql as drizzleSql } from 'drizzle-orm';
+import { eq, sql as drizzleSql, desc } from 'drizzle-orm';
 import { cookies, headers } from 'next/headers';
 
 const sql = neon(process.env.DATABASE_URL!);
@@ -68,7 +68,7 @@ export async function verificarApodo(apodoForm: string) {
     return { success: true, usuario };
   }
 
-  return { success: false, error: 'Algo salió mal (zafa noma kchao)' };
+  return { success: false, error: 'Algo salió mal (zafa nomas kchao)' };
 }
 
 // 3. Confirmar Asistencia
@@ -78,10 +78,11 @@ export async function confirmarAsistencia(id: number, asiste: boolean) {
 }
 
 // 4. Agregar Post al Muro
-export async function publicarEnMuro(invitadoId: number, mensajeTexto: string) {
+export async function publicarEnMuro(invitadoId: number, mensajeTexto: string, fotoUrl?: string) {
   await db.insert(muro).values({
     invitadoId,
     mensaje: mensajeTexto,
+    fotoUrl: fotoUrl || null,
   });
   return { success: true };
 }
@@ -93,4 +94,35 @@ export async function enviarMensajeChat(invitadoId: number, mensajeTexto: string
     mensaje: mensajeTexto,
   });
   return { success: true };
+}
+
+// 6. Traer todos los posts del muro ordenados por fecha
+export async function obtenerPostsMuro() {
+  const resultado = await db.select({
+    id: muro.id,
+    mensaje: muro.mensaje,
+    fotoUrl: muro.fotoUrl,
+    creadoEn: muro.creadoEn,
+    nombre: invitados.nombre
+  })
+  .from(muro)
+  .leftJoin(invitados, eq(muro.invitadoId, invitados.id))
+  .orderBy(desc(muro.creadoEn));
+
+  return resultado;
+}
+
+// 7. Traer los últimos 50 mensajes del chat general
+export async function obtenerMensajesChat() {
+  const resultado = await db.select({
+    id: chatGeneral.id,
+    mensaje: chatGeneral.mensaje,
+    creadoEn: chatGeneral.creadoEn,
+    nombre: invitados.nombre
+  })
+  .from(chatGeneral)
+  .leftJoin(invitados, eq(chatGeneral.invitadoId, invitados.id))
+  .orderBy(chatGeneral.creadoEn); // En orden cronológico para el chat
+
+  return resultado;
 }
