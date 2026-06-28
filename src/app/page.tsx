@@ -65,7 +65,7 @@ export default function Home() {
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'auto' });
-  }, [mensajesChat, usuario]);
+  }, [mensajesChat]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

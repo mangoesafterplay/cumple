@@ -133,18 +133,19 @@ export async function subirFotoMuro(formData: FormData) {
   if (!file || file.size === 0) return null;
 
   try {
-    // Convertimos el archivo a un Buffer nativo para que Vercel put lo procese sin fallos de streaming
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
+    // Forzamos la lectura del token de Vercel explícitamente
     const blob = await put(file.name, buffer, {
       access: 'public',
-      contentType: file.type, // Asegura que se guarde con el formato correcto (.jpg, .png, etc.)
+      contentType: file.type,
+      token: process.env.BLOB_READ_WRITE_TOKEN, // 🔥 Aseguramos el token aquí
     });
 
     return blob.url;
   } catch (error) {
-    console.error("Error crítico en el servidor de Vercel Blob:", error);
+    console.error("❌ ERROR CRÍTICO EN VERCEL BLOB STORES:", error);
     return null;
   }
 }
