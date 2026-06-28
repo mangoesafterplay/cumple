@@ -63,10 +63,6 @@ export default function Home() {
     validarSesion();
   }, []);
 
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'auto' });
-  }, [mensajesChat]);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!apodoInput.trim()) return;
