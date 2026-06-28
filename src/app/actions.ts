@@ -1,5 +1,6 @@
 'use server';
 
+import { put } from '@vercel/blob';
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { invitados, muro, chatGeneral } from '@/db/schema';
@@ -125,4 +126,16 @@ export async function obtenerMensajesChat() {
   .orderBy(chatGeneral.creadoEn); // En orden cronológico para el chat
 
   return resultado;
+}
+
+export async function subirFotoMuro(formData: FormData) {
+  const file = formData.get('file') as File;
+  if (!file) return null;
+
+  // El método 'put' lee automáticamente tu BLOB_READ_WRITE_TOKEN en Vercel
+  const blob = await put(file.name, file, {
+    access: 'public',
+  });
+
+  return blob.url; // Retorna la URL final de la imagen
 }

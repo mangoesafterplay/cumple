@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skull, MessageSquare, Send, Zap, MapPin, Calendar, Clock, AlertTriangle, Image as ImageIcon } from 'lucide-react';
-import { verificarApodo, obtenerSesionActiva, confirmarAsistencia, publicarEnMuro, enviarMensajeChat, obtenerPostsMuro, obtenerMensajesChat } from './actions';
+import { verificarApodo, obtenerSesionActiva, confirmarAsistencia, publicarEnMuro, enviarMensajeChat, obtenerPostsMuro, obtenerMensajesChat, subirFotoMuro } from './actions';
 import { upload } from '@vercel/blob/client';
 
 // EL DICCIONARIO DE MENSAJES CURSED (INTACTO)
@@ -78,6 +78,18 @@ export default function Home() {
     if (res.success && res.usuario) {
       setUsuario(res.usuario);
       setConfirmado(res.usuario.confirmado ?? false);
+
+      try {
+        const [muroData, chatData] = await Promise.all([
+          obtenerPostsMuro(),
+          obtenerMensajesChat()
+        ]);
+        setPostsMuro(muroData);
+        setMensajesChat(chatData);
+      } catch (err) {
+        console.error("Error cargando los datos iniciales de Neon:", err);
+      }
+
     } else {
       setErrorLanding(res.error || 'ERROR FATAL. NO EXISTES.');
     }
@@ -99,11 +111,13 @@ export default function Home() {
 
     try {
       if (fileMuro) {
-        const newBlob = await upload(fileMuro.name, fileMuro, {
-          access: 'public',
-          handleUploadUrl: '/api/avatar/upload',
-        });
-        finalUrl = newBlob.url;
+        // Empaquetamos el archivo en un FormData nativo para mandarlo al servidor
+        const formData = new FormData();
+        formData.append('file', fileMuro);
+
+        // Llamamos al backend para que él haga la subida segura
+        const urlSubida = await subirFotoMuro(formData);
+        if (urlSubida) finalUrl = urlSubida;
       }
 
       await publicarEnMuro(usuario.id, mensajeMuro, finalUrl);
@@ -111,7 +125,7 @@ export default function Home() {
       setMensajeMuro('');
       setFileMuro(null);
     } catch (err) {
-      console.error(err);
+      console.error("Error al subir shitpost:", err);
     } finally {
       setSubiendoFoto(false);
     }
